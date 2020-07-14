@@ -9,7 +9,6 @@ errors=[]
 for path, junior, senior in annos[:400]:
     errors.append(np.sqrt(((junior/10-senior/10)**2).sum(1))/2)
 
-
 all_errors = np.stack(errors).transpose(1,0).reshape(1,19,400,1)
 
 with open(f'doctors_big.npz', 'wb') as f:

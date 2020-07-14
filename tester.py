@@ -34,7 +34,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
 
 
     batchsize=2
-    device = 'cuda'
+    device = 'cpu'
 
     splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
 
@@ -69,7 +69,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     next_batch = data_iter.next()  # start loading the first batch
 
     # with pin_memory=True and async=True, this will copy data to GPU non blockingly
-    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+    next_batch = [t for t in next_batch]
 
     start = time()
     errors = []
@@ -83,7 +83,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
         if i + 2 != len(dataloaders[phase]):
             # start copying data of next batch
             next_batch = data_iter.next()
-            next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+            next_batch = [t for t in next_batch]
 
 
         inputs_tensor = inputs.to(device)
@@ -201,4 +201,3 @@ if __name__ == '__main__':
     with open('results_ensemble.npz', 'wb') as f:
         np.savez(f, all_errors)
 '''
-

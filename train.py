@@ -29,7 +29,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
     num_epochs=40
-    device = 'cuda'
+    device = 'cpu'
 
 
     splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,batchsize=batchsize,fold=fold,num_folds=num_folds,fold_size=fold_size)
@@ -93,7 +93,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             next_batch = data_iter.next()  # start loading the first batch
 
             # with pin_memory=True and async=True, this will copy data to GPU non blockingly
-            next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+            next_batch = [t for t in next_batch]
 
             start = time()
 
@@ -107,7 +107,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                 if i + 2 != len(dataloaders[phase]):
                     # start copying data of next batch
                     next_batch = data_iter.next()
-                    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+                    next_batch = [t for t in next_batch]
 
 
                 inputs_tensor = inputs.to(device)

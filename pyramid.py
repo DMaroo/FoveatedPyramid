@@ -104,13 +104,13 @@ def test():
     dataloader = torch.utils.data.DataLoader(data,batch_size=2, shuffle=False, num_workers=4,
                                                   pin_memory=True)
 
-    test = next(iter(dataloader))[0].cuda()
+    test = next(iter(dataloader))[0]
     batch=2
     heads = 19
     sz = 128
     reps = 3
     levels = 6
-    #test = torch.zeros((batch, 1, 1920, 2400)).cuda()
+    #test = torch.zeros((batch, 1, 1920, 2400))
     start = time()
     for i in range(1):#range(324 // batch):
         start_level = 1
@@ -126,12 +126,12 @@ def test():
                  [sin(theta), cos(theta), 0]],
                 [[1, 0, -1],
                  [0, 1, -1920/2432.]]
-                ],device='cuda').expand(batch,-1,-1,-1)
+                ],device='cpu').expand(batch,-1,-1,-1)
             s = stack(pym, sz, T)
                 #storage[:, i,:,:,:] = s
 
 
-            #offset = torch.tensor([0,0,0,0,0,0],device='cuda').reshape(2,3)
+            #offset = torch.tensor([0,0,0,0,0,0],device='cpu').reshape(2,3)
 
             TR = T[0,0]
             t = pyramid_transform(TR,2432,1920,sz,start_level,level)
@@ -139,7 +139,7 @@ def test():
             print(time() - start)
             print(s.shape)
             plt.imshow(s[0, 0, level, :, :].squeeze().cpu().numpy())
-            pnt = torch.tensor([1,-1,1.],device='cuda').reshape(1,3)
+            pnt = torch.tensor([1,-1,1.],device='cpu').reshape(1,3)
             #up = torch.matmul(pnt,ts[0,0,level-1,:,:].t())
             #print(up.shape,T[:,:,:,[2].shape)
             #T[:, :, :, [2]] = up.reshape(1,1,2,1)
@@ -157,5 +157,3 @@ def test():
 
 if __name__=='__main__':
     test()
-
-

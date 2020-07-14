@@ -41,7 +41,7 @@ class ReSpaceNet(res.ResNet):
         cw = self.conv1.weight
 
         self.conv1.stride = (1,1)
-        self.conv1.weight = nn.Parameter(cw[:,[1],:,:].cuda())
+        self.conv1.weight = nn.Parameter(cw[:,[1],:,:])
 
         self.layer4 = None
         self.layer3[5].conv2.bias = nn.Parameter(torch.zeros(256))
@@ -166,7 +166,7 @@ def load_model(levels,name,load=False):
     if load:
         model.load_state_dict(torch.load(f"Models/{name}.pt"))
 
-    model.to('cuda')
+    model.to('cpu')
     return model
 
 def save_model(model, name):
