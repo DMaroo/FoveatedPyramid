@@ -16,6 +16,8 @@ import sys
 import copy
 import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.models.resnet import resnet50
 
 def all():
     errors=[]
@@ -35,7 +37,6 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,batchsize=batchsize,fold=fold,num_folds=num_folds,fold_size=fold_size)
 
 
-
     if avg_labels:
         pnts = np.stack(list(map(lambda x: (x[1]+x[2])/2, annos)))
     else:
@@ -53,7 +54,17 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     model = m.load_model(levels, name, load)
 
+    writer = SummaryWriter('runs/foveatedPyramid_1')
 
+    # net = resnet50()
+    inputs = torch.randn(1,3,256,256)
+    # o = net(inputs)
+    graph = SummaryWriter()
+    graph.add_graph(model, (inputs,) )
+
+    # writer.add_graph(model, [])
+
+    writer.close()
 
     best_error = 1000
     last_error = 1000
@@ -94,7 +105,8 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
             # with pin_memory=True and async=True, this will copy data to GPU non blockingly
             next_batch = [t for t in next_batch]
-
+            numpyBatch = next_batch[0][0][0].cpu().numpy()
+            print("0:", numpyBatch.shape)
             start = time()
 
             # TODO error tracking should be its own thing maybe
@@ -266,4 +278,5 @@ if __name__ == '__main__':
                 print(f"Running fold {fold}, point {i}")
                 train(f"lil_hybrid_{i}_{run}", [i], batched=True, fold=fold, num_folds=2, fold_size=150,iterations=10,avg_labels=True)
     else:
-        train("test_avg_up",[0],num_folds=2,fold_size=150,fold=1,graphical=False,avg_labels=False,iterations=10,batched=True)#,load=True,startEpoch=20)
+        # train("test_avg_up",[0],num_folds=2,fold_size=150,fold=1,graphical=False,avg_labels=False,iterations=10,batched=True)#,load=True,startEpoch=20)
+        train("test_avg_up",[0],num_folds=1,fold_size=3,fold=1,graphical=True,avg_labels=False,iterations=1,batched=True, startEpoch=38)#,load=True,startEpoch=20)

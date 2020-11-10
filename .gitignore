@@ -1,2 +1,7 @@
 .DS_Store
 *.rar
+images
+Models
+__pycache__
+*.npz
+runs

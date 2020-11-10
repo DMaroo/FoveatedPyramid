@@ -136,7 +136,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
 
         print(f"Error {i}: {all_error[i]} (doctor: {doc_error[i]}")
 
-    print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}")
+    print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}s")
     return errors
 
 
@@ -172,7 +172,8 @@ if __name__=='__main__':
             all()
 
     else:
-        print(test([{'loadpath':"Models/test.pt"}],[11]).mean())
+        #print(test([{'loadpath':"Models/test.pt"}],[11]).mean())
+        print(test([{'loadpath':"Models/test_avg_up.pt"}],[0], fold_size=3).mean())
 
 '''
 if __name__ == '__main__':

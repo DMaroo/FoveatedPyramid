@@ -12,22 +12,30 @@ class HeadXrays(Dataset):
     def __init__(self, directory, junior=True):
         self.anno_dir = os.path.join(directory, f"AnnotationsByMD")
         img_dir = os.path.join(directory, "TrainingData")
-        # img_dir1 = os.path.join(directory, "Test1Data")
-        # img_dir2 = os.path.join(directory, "Test2Data")
+        img_dir1 = os.path.join(directory, "Test1Data")
+        img_dir2 = os.path.join(directory, "Test2Data")
 
         images = filter(lambda f: not f.startswith("."),os.listdir(img_dir))
-        # images1 = filter(lambda f: not f.startswith("."),os.listdir(img_dir1))
-        # images2 = filter(lambda f: not f.startswith("."),os.listdir(img_dir2))
+        images1 = filter(lambda f: not f.startswith("."),os.listdir(img_dir1))
+        images2 = filter(lambda f: not f.startswith("."),os.listdir(img_dir2))
 
         parse_id = lambda img: int(img.split(".bmp")[0])
 
         images = [(parse_id(img), img) for img in images]
-        # images += [(parse_id(img), img) for img in images1]
-        # images += [(parse_id(img), img) for img in images2]
+        images1 = [(parse_id(img), img) for img in images1]
+        images2 = [(parse_id(img), img) for img in images2]
 
         images.sort(key = lambda x: x[0])
+        images1.sort(key = lambda x: x[0])
+        images2.sort(key = lambda x: x[0])
+
         self.files = np.array([(os.path.join(img_dir,img[1]),) + self.loadAnnotations(img[0]) for img in images])
-        #print(self.files)
+        files1 = np.array([(os.path.join(img_dir1,img[1]),) + self.loadAnnotations(img[0]) for img in images1])
+        files2 = np.array([(os.path.join(img_dir2,img[1]),) + self.loadAnnotations(img[0]) for img in images2])
+
+        self.files = np.concatenate((self.files, files1, files2))
+
+        print(self.files.shape)
 
     def loadAnnotations(self,id):
         anno = ()

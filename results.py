@@ -54,7 +54,7 @@ elif ver==4:
 
 elif ver==5:
     errors = []
-    with open('results_lil_hybrid_test2_0.npz', 'rb') as f:
+    with open('doctors_lil2.npz', 'rb') as f:
         res = np.load(f)['arr_0']
 
     with open('doctors_lil2.npz', 'rb') as f:
@@ -88,10 +88,12 @@ str = "Landmark & PEL (mm) & IOV (mm) & SDR 2.0mm & SDR 2.5mm & SDR 3.0mm & SDR 
 
 str+="\\hline\n"
 
-
 res = res.transpose(1,0,2,3)
 doc = doc.transpose(1,0,2,3)
-numel = res.shape[2]
+
+print(res.shape)
+
+numel = res.shape[2] #numel = number_of_elements
 for i, r in enumerate(res):
     d = doc[i]
     rm = f"{r.mean():2.2f}"
@@ -106,6 +108,3 @@ str+="\hline\n"
 str+=f"Average & \\textbf{{{res.mean():2.2f}}} $\\pm$ {(res.std(2)).mean():2.2f} & {doc.mean():2.2f} $\\pm$ {(doc.std(2)).mean():2.2f} & {((res<2).sum(2)/numel*100).mean():3.2f} & {((res<2.5).sum(2)/numel*100).mean():3.2f} & {((res<3).sum(2)/numel*100).mean():3.2f} & {((res<4).sum(2)/numel*100).mean():3.2f}\\\\\n"
 
 print(str)
-
-
-
