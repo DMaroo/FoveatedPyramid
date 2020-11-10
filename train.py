@@ -34,7 +34,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     device = 'cpu'
 
 
-    splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,batchsize=batchsize,fold=fold,num_folds=num_folds,fold_size=fold_size)
+    splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,fold=fold,num_folds=num_folds,fold_size=fold_size,batchsize=batchsize)
 
 
     if avg_labels:
@@ -54,17 +54,17 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     model = m.load_model(levels, name, load)
 
-    writer = SummaryWriter('runs/foveatedPyramid_1')
-
-    # net = resnet50()
-    inputs = torch.randn(1,3,256,256)
-    # o = net(inputs)
-    graph = SummaryWriter()
-    graph.add_graph(model, (inputs,) )
-
-    # writer.add_graph(model, [])
-
-    writer.close()
+    # writer = SummaryWriter('runs/foveatedPyramid_1')
+    #
+    # # net = resnet50()
+    # inputs = torch.randn(1,3,256,256)
+    # # o = net(inputs)
+    # graph = SummaryWriter()
+    # graph.add_graph(model, (inputs,) )
+    #
+    # # writer.add_graph(model, [])
+    #
+    # writer.close()
 
     best_error = 1000
     last_error = 1000
@@ -105,8 +105,8 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
             # with pin_memory=True and async=True, this will copy data to GPU non blockingly
             next_batch = [t for t in next_batch]
-            numpyBatch = next_batch[0][0][0].cpu().numpy()
-            print("0:", numpyBatch.shape)
+            #numpyBatch = next_batch[0][0][0].cpu().numpy()
+            # print("Batch Shape:", next_batch)
             start = time()
 
             # TODO error tracking should be its own thing maybe
@@ -146,7 +146,11 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                         #    guess = torch.normal(means, stddevs).to(device).clamp(-1, 1)
                         optimizer.zero_grad()
                         outputs = guess + model(pym, guess, phase=='train')
-                        loss = F.mse_loss(outputs, labels_tensor,reduction='none')
+                        # print("Outpus:", outputs.shape ) # [2, 2, 2]
+                        # print(outputs )
+                        # print("Labels:", labels_tensor.shape) # [2, 1, 2]
+                        # print(labels_tensor )
+                        loss = F.mse_loss(outputs, labels_tensor, reduction='none')
 
                         if phase == 'train':
                             if rms:
@@ -240,6 +244,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             if phase == 'val' and error < best_error:
                 best_error = error
                 print(f"New best {error}")
+                m.save_model(model, name+best_error)
 
             if phase == 'val' and batched:
                 if not os.path.exists("Results"):
@@ -269,9 +274,9 @@ if __name__ == '__main__':
                 print(f"Running fold {fold}, point {i}")
                 train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=100,iterations=10,avg_labels=False)
         elif test==1:
-            print("RUNNING SMALL TEST")
+            print("RUNNING SMALL TEST") #over 4 points
             fold = 1
-            pnt = id % 5 * 4
+            pnt = id % 5 * 4 #0, 4, 8, 12, 16
             run = id//5
 
             for i in range(pnt, min(pnt + 4, 19)):
@@ -279,4 +284,4 @@ if __name__ == '__main__':
                 train(f"lil_hybrid_{i}_{run}", [i], batched=True, fold=fold, num_folds=2, fold_size=150,iterations=10,avg_labels=True)
     else:
         # train("test_avg_up",[0],num_folds=2,fold_size=150,fold=1,graphical=False,avg_labels=False,iterations=10,batched=True)#,load=True,startEpoch=20)
-        train("test_avg_up",[0],num_folds=1,fold_size=3,fold=1,graphical=True,avg_labels=False,iterations=1,batched=True, startEpoch=38)#,load=True,startEpoch=20)
+        train("lil_hybrid_0_0", [0],batched=True, fold=1, num_folds=2, fold_size=150,iterations=10,avg_labels=True)#,load=True,startEpoch=20)

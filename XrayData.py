@@ -35,7 +35,7 @@ class HeadXrays(Dataset):
 
         self.files = np.concatenate((self.files, files1, files2))
 
-        print(self.files.shape)
+        print("File Shape:", self.files.shape)
 
     def loadAnnotations(self,id):
         anno = ()

@@ -146,6 +146,30 @@ if __name__=='__main__':
 
 
         test_num = int(sys.argv[1])
+
+        if test_num==0:
+            folds_errors = []
+            fold = 1
+
+            errors = []
+            run = 0
+            from time import time
+            rt = time()
+            for i in range(1):
+                settings = []
+                #for run in range(1,2):
+                path = f"Models/lil_hybrid_{i}_{run}.pt"
+                settings.append({'loadpath': path})
+                errors.append(test(settings, [i], fold=3,num_folds=4,fold_size=100))
+            all_errors = np.stack(errors)
+            folds_errors.append(all_errors)
+
+            all_folds_errors = np.stack(folds_errors)
+            print(all_errors.mean())
+            with open(f'results_lil_1.npz', 'wb') as f:
+                np.savez(f, all_folds_errors)
+            print(time()-rt)
+
         if test_num==1:
             folds_errors = []
             fold = 1

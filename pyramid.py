@@ -115,7 +115,7 @@ def test():
     for i in range(1):#range(324 // batch):
         start_level = 1
         level = 3
-        pym = pyramid(test, start_level)
+        pym = pyramid(test, start_level, levels)
 
         for j in range(1):#reps*19):
             #storage = torch.zeros(batch, heads, levels, sz, sz)
@@ -134,13 +134,13 @@ def test():
             #offset = torch.tensor([0,0,0,0,0,0],device='cpu').reshape(2,3)
 
             TR = T[0,0]
-            #t = pyramid_transform(TR,2432,1920,sz,start_level,level)
-            t = pyramid_transform(TR,2432,1920,sz,start_level)
+            t = pyramid_transform(TR,2432,1920,sz,start_level,level)
+            # t = pyramid_transform(TR,2432,1920,sz,start_level)
             #print(s.shape)
             print(time() - start)
             print(s.shape)
-            #plt.imshow(s[0, 0, level, :, :].squeeze().cpu().numpy())
-            plt.imshow(s[0, 0, 0, :, :].squeeze().cpu().numpy())
+            plt.imshow(s[0, 0, level, :, :].squeeze().cpu().numpy())
+            # plt.imshow(s[0, 0, 0, :, :].squeeze().cpu().numpy())
             pnt = torch.tensor([1,-1,1.],device='cpu').reshape(1,3)
             #up = torch.matmul(pnt,ts[0,0,level-1,:,:].t())
             #print(up.shape,T[:,:,:,[2].shape)
