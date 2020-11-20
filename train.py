@@ -16,9 +16,6 @@ import sys
 import copy
 import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
-from torch.utils.tensorboard import SummaryWriter
-from torchvision.models.resnet import resnet50
-
 def all():
     errors=[]
     for i in range(19):
@@ -54,17 +51,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     model = m.load_model(levels, name, load)
 
-    # writer = SummaryWriter('runs/foveatedPyramid_1')
-    #
-    # # net = resnet50()
-    # inputs = torch.randn(1,3,256,256)
-    # # o = net(inputs)
-    # graph = SummaryWriter()
-    # graph.add_graph(model, (inputs,) )
-    #
-    # # writer.add_graph(model, [])
-    #
-    # writer.close()
+
 
     best_error = 1000
     last_error = 1000
