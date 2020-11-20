@@ -5,3 +5,4 @@ Models
 __pycache__
 *.npz
 runs
+*.zip
