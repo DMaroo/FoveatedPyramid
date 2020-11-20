@@ -27,7 +27,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
-    num_epochs=40
+    num_epochs=2
     device = 'cpu'
 
 
@@ -41,7 +41,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     means = torch.tensor(pnts.mean(0,keepdims=True),device=device,dtype=torch.float32)
     stddevs = torch.tensor(pnts.std(0,keepdims=True),device=device,dtype=torch.float32)
-    levels = 6
+    levels = 1
 
 
     # TODO goes with plotting
@@ -76,6 +76,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             fix, ax = plt.subplots(1, 3)
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
+            print("Now in phase", phase)
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -231,7 +232,6 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             if phase == 'val' and error < best_error:
                 best_error = error
                 print(f"New best {error}")
-                m.save_model(model, name+str(best_error))
 
             if phase == 'val' and batched:
                 if not os.path.exists("Results"):
@@ -239,7 +239,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                 with open(f'Results/{name}.npz', 'wb') as f:
                     np.savez(f, errors)
 
-            print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}")
+            print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}s)")
         if graphical:
             plt.show(block=False)
 
@@ -251,7 +251,9 @@ if __name__ == '__main__':
     if len(sys.argv)>1:
         test = int(sys.argv[1])
 
-        id = int(sys.argv[2])
+        if len(sys.argv) > 2:
+            id = int(sys.argv[2])
+
         if test==0:
             print("RUNNING LARGE TEST")
             fold = id//10
@@ -269,6 +271,30 @@ if __name__ == '__main__':
             for i in range(pnt, min(pnt + 4, 19)):
                 print(f"Running fold {fold}, point {i}")
                 train(f"lil_hybrid_{i}_{run}", [i], batched=True, fold=fold, num_folds=2, fold_size=150,iterations=10,avg_labels=True)
+
+        elif test==2:
+            '''
+            These settings replicate the ISBI 2015 challenge and the published results, as close as possible.
+            Very small version
+            '''
+            errors=[]
+            for i in range(19):
+                errors.append(train(f"single_{i}",[i], batched=True, fold=1, num_folds=2, fold_size=3, iterations=10, avg_labels=True))
+            print(errors)
+
+        elif test==3:
+            '''
+            These settings replicate the ISBI 2015 challenge and the published results, as close as possible.
+            Splits the first 150 Images (30*5, all of TrainingData) into 5 folds. Fold=4 is the validation fold (20% of TrainingData)
+            The average of the junior and senior doctor lables is the ground truth
+            train("lil_hybrid_0_0", [0],batched=True, fold=4, num_folds=5, fold_size=30,iterations=10,avg_labels=True)
+            '''
+            errors=[]
+            for i in range(19):
+                errors.append(train(f"single_{i}",[i], batched=True, fold=4, num_folds=5, fold_size=30, iterations=10, avg_labels=True))
+            print(errors)
+
     else:
         # train("test_avg_up",[0],num_folds=2,fold_size=150,fold=1,graphical=False,avg_labels=False,iterations=10,batched=True)#,load=True,startEpoch=20)
-        train("lil_hybrid_0_0", [0],batched=True, fold=1, num_folds=2, fold_size=150,iterations=10,avg_labels=True)#,load=True,startEpoch=20)
+        # train("lil_hybrid_0_0", [0],batched=True, fold=1, num_folds=2, fold_size=4,iterations=10,avg_labels=True)#,load=True,startEpoch=20)
+        print("Else")

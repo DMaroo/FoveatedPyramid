@@ -8,6 +8,7 @@ if ver==1:
 
     with open('doctors_lil.npz', 'rb') as f:
         doc = np.load(f)['arr_0']
+
 elif ver==0:
     with open('results_lil_fixed_0.npz', 'rb') as f:
         res = np.load(f)['arr_0']
@@ -54,7 +55,7 @@ elif ver==4:
 
 elif ver==5:
     errors = []
-    with open('doctors_lil2.npz', 'rb') as f:
+    with open('results_lil_hybrid_test2_0.npz', 'rb') as f:
         res = np.load(f)['arr_0']
 
     with open('doctors_lil2.npz', 'rb') as f:

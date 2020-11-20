@@ -132,6 +132,10 @@ def get_folded(landmarks, fold, num_folds, fold_size, batchsize):
     val_fold = fold == np.arange(num_folds)
     val_set = folds[val_fold].flatten()
     train_set = folds[~val_fold].flatten()
+
+    print("Trainset: ", train_set)
+    print("ValSet", val_set)
+
     splits, datasets = get_train_val(landmarks, train_set, val_set)
     annos = TransformedHeadXrayAnnos(indices=train_set, landmarks=landmarks)
     dataloaders = {x: torch.utils.data.DataLoader(datasets[x],

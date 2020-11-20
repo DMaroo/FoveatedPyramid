@@ -17,6 +17,7 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
         model.load_state_dict(state_dict)
     return model
 
+
 class ReSpaceNet(res.ResNet):
     def __init__(self, block, layers,**kwargs):
         super().__init__(block,layers,**kwargs)
