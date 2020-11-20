@@ -170,7 +170,7 @@ if __name__=='__main__':
                 np.savez(f, all_folds_errors)
             print(time()-rt)
 
-        if test_num==1:
+        elif test_num==1:
             folds_errors = []
             fold = 1
 

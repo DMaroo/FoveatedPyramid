@@ -244,7 +244,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             if phase == 'val' and error < best_error:
                 best_error = error
                 print(f"New best {error}")
-                m.save_model(model, name+best_error)
+                m.save_model(model, name+str(best_error))
 
             if phase == 'val' and batched:
                 if not os.path.exists("Results"):
