@@ -6,3 +6,4 @@ __pycache__
 *.npz
 runs
 *.zip
+EvaluationCode
