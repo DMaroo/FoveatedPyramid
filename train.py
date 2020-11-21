@@ -27,8 +27,9 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
-    num_epochs=2
-    device = 'cpu'
+    num_epochs=40
+    device = 'cuda'
+
 
 
     splits, datasets, dataloaders, annos = XrayData.get_folded(landmarks,fold=fold,num_folds=num_folds,fold_size=fold_size,batchsize=batchsize)
@@ -41,7 +42,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     means = torch.tensor(pnts.mean(0,keepdims=True),device=device,dtype=torch.float32)
     stddevs = torch.tensor(pnts.std(0,keepdims=True),device=device,dtype=torch.float32)
-    levels = 1
+    levels = 6
 
 
     # TODO goes with plotting
@@ -76,7 +77,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             fix, ax = plt.subplots(1, 3)
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
-            print("Now in phase", phase)
+            print("Now in phase:", phase)
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -92,9 +93,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
             next_batch = data_iter.next()  # start loading the first batch
 
             # with pin_memory=True and async=True, this will copy data to GPU non blockingly
-            next_batch = [t for t in next_batch]
-            #numpyBatch = next_batch[0][0][0].cpu().numpy()
-            # print("Batch Shape:", next_batch)
+            next_batch = [t.cuda(non_blocking=True) for t in next_batch]
             start = time()
 
             # TODO error tracking should be its own thing maybe
@@ -107,7 +106,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                 if i + 2 != len(dataloaders[phase]):
                     # start copying data of next batch
                     next_batch = data_iter.next()
-                    next_batch = [t for t in next_batch]
+                    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
 
 
                 inputs_tensor = inputs.to(device)
@@ -134,11 +133,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
                         #    guess = torch.normal(means, stddevs).to(device).clamp(-1, 1)
                         optimizer.zero_grad()
                         outputs = guess + model(pym, guess, phase=='train')
-                        # print("Outpus:", outputs.shape ) # [2, 2, 2]
-                        # print(outputs )
-                        # print("Labels:", labels_tensor.shape) # [2, 1, 2]
-                        # print(labels_tensor )
-                        loss = F.mse_loss(outputs, labels_tensor, reduction='none')
+                        loss = F.mse_loss(outputs, labels_tensor,reduction='none')
 
                         if phase == 'train':
                             if rms:
@@ -262,7 +257,14 @@ if __name__ == '__main__':
             for i in range(pnt,min(pnt+2,19)):
                 print(f"Running fold {fold}, point {i}")
                 train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=100,iterations=10,avg_labels=False)
-        elif test==1:
+        if test==1:
+            print("RUNNING TRAIN on 4 folds for 19 landmarks")
+            for fold in range(4):
+                for i in range(19):
+                    print(f"Running fold {fold}, point {i}")
+                    train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=100,iterations=10,avg_labels=False)
+
+        elif test==2:
             print("RUNNING SMALL TEST") #over 4 points
             fold = 1
             pnt = id % 5 * 4 #0, 4, 8, 12, 16
@@ -272,7 +274,7 @@ if __name__ == '__main__':
                 print(f"Running fold {fold}, point {i}")
                 train(f"lil_hybrid_{i}_{run}", [i], batched=True, fold=fold, num_folds=2, fold_size=150,iterations=10,avg_labels=True)
 
-        elif test==2:
+        elif test==3:
             '''
             These settings replicate the ISBI 2015 challenge and the published results, as close as possible.
             Very small version
@@ -282,7 +284,7 @@ if __name__ == '__main__':
                 errors.append(train(f"single_{i}",[i], batched=True, fold=1, num_folds=2, fold_size=3, iterations=10, avg_labels=True))
             print(errors)
 
-        elif test==3:
+        elif test==4:
             '''
             These settings replicate the ISBI 2015 challenge and the published results, as close as possible.
             Splits the first 150 Images (30*5, all of TrainingData) into 5 folds. Fold=4 is the validation fold (20% of TrainingData)
