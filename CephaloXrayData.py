@@ -78,8 +78,6 @@ class Transform(Dataset):
 
     def __getitem__(self, idx):
         x, doc_anno = self.dataset[self.indices[idx]]
-        print('y: ', self.ty(doc_anno))
-        # breakpoint()
         return self.tx(x), self.ty(doc_anno)
 
     def __len__(self):
@@ -166,6 +164,7 @@ if __name__ == '__main__':
         plt.pause(0.001)  # pause a bit so that plots are updated
 
     plt.figure()
+
     xrays = TransformedXrays(indices=[0], landmarks=[14])[0]
     middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
     recreated_points = ((xrays[1]*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
