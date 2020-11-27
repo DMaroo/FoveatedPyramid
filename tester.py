@@ -1,4 +1,5 @@
 import XrayData
+import CephaloXrayData
 import torchvision.transforms as transforms
 import numpy as np
 from random import randint
@@ -13,6 +14,7 @@ import copy
 import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
 import sys
+import pdb
 
 def all():
     folds_errors = []
@@ -40,6 +42,8 @@ def test_cephalo(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_la
     splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
 
     annos = XrayData.TransformedHeadXrayAnnos(indices=list(range(150)), landmarks=landmarks)
+
+    breakpoint()
 
     if avg_labels:
         pnts = np.stack(list(map(lambda x: (x[1] + x[2]) / 2, annos)))
@@ -192,7 +196,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     for i in range(len(dataloaders[phase])):
         batch = next_batch
         inputs, junior_labels, senior_labels = batch
-
+        breakpoint()
 
         if i + 2 != len(dataloaders[phase]):
             # start copying data of next batch
