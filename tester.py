@@ -29,6 +29,117 @@ def all():
         np.savez(f, all_folds_errors)
 
 
+def test_cephalo(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=True):
+    print("TEST")
+
+    batchsize=2
+    levels = 6
+    device = 'cpu'
+    output_count=len(landmarks)
+
+    splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
+
+    annos = XrayData.TransformedHeadXrayAnnos(indices=list(range(150)), landmarks=landmarks)
+
+    if avg_labels:
+        pnts = np.stack(list(map(lambda x: (x[1] + x[2]) / 2, annos)))
+    else:
+        pnts = np.stack(list(map(lambda x: x[1], annos)))
+
+    means = torch.tensor(pnts.mean(0, keepdims=True), device=device, dtype=torch.float32)
+
+
+    models = []
+    for setting in settings:
+        model = m.PyramidAttention(levels)
+        if (device == 'cuda'):
+            model.load_state_dict(torch.load(setting['loadpath']))
+        else:
+            model.load_state_dict(torch.load(setting['loadpath'], map_location=torch.device('cpu')))
+
+        models.append(model)
+        model.to(device)
+        model.eval()
+
+    criterion = nn.MSELoss(reduction='none')
+    # Iterate over data.
+
+    phase='val'
+    data_iter = iter(dataloaders[phase])
+    next_batch = data_iter.next()  # start loading the first batch
+
+    # with pin_memory=True and async=True, this will copy data to GPU non blockingly
+    if (device == 'cuda'):
+        next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+    else:
+        next_batch = [t for t in next_batch]
+
+    start = time()
+    errors = []
+    doc_errors = []
+    print("GOT HERE")
+    for i in range(len(dataloaders[phase])):
+        batch = next_batch
+        inputs, junior_labels, senior_labels = batch
+
+
+        if i + 2 != len(dataloaders[phase]):
+            # start copying data of next batch
+            next_batch = data_iter.next()
+            if (device == 'cuda'):
+                next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+            else:
+                next_batch = [t for t in next_batch]
+
+
+        inputs_tensor = inputs.to(device)
+
+        if avg_labels:
+            labels_tensor = torch.stack((junior_labels, senior_labels), dim=0).mean(0).to(device).to(torch.float32)
+        else:
+            labels_tensor = junior_labels.to(device).to(torch.float32)
+
+        # zero the parameter gradients
+
+        pym = pyramid(inputs_tensor, levels)
+
+        # forward
+        # track history if only in train
+        with torch.set_grad_enabled(False):
+            # Get model outputs and calculate loss
+            all_outputs = []
+            for model in models:
+                guess = means
+
+
+                for j in range(10):
+                    outputs = guess + model(pym, guess,
+                                            phase == 'train')  # ,j==2 and i==0 and phase=='val' and False,rando)
+                    guess = outputs.detach()
+
+                all_outputs.append(guess)
+
+            avg = torch.stack(all_outputs,0).mean(0)
+
+            loss = criterion(avg, labels_tensor)
+
+            error = loss.detach().sum(dim=2).sqrt()
+            errors.append(error)
+            doc_errors.append(F.mse_loss(junior_labels, senior_labels, reduction='none').sum(dim=2).sqrt())
+
+    errors = torch.cat(errors,0).detach().cpu().numpy()/2*192
+    doc_errors = torch.cat(doc_errors,0).detach().cpu().numpy()/2*192
+
+    doc_error = doc_errors.mean(0)
+    all_error = errors.mean(0)
+    error = errors.mean()
+    for i in range(output_count):
+
+        print(f"Error {i}: {all_error[i]} (doctor: {doc_error[i]}")
+
+    print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}s")
+    return errors
+
 def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=True):
     print("TEST")
 
@@ -69,7 +180,10 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     next_batch = data_iter.next()  # start loading the first batch
 
     # with pin_memory=True and async=True, this will copy data to GPU non blockingly
-    next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+    if (device == 'cuda'):
+        next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+    else:
+        next_batch = [t for t in next_batch]
 
     start = time()
     errors = []
@@ -83,7 +197,10 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
         if i + 2 != len(dataloaders[phase]):
             # start copying data of next batch
             next_batch = data_iter.next()
-            next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+            if (device == 'cuda'):
+                next_batch = [t.cuda(non_blocking=True) for t in next_batch]
+            else:
+                next_batch = [t for t in next_batch]
 
 
         inputs_tensor = inputs.to(device)
@@ -193,6 +310,31 @@ if __name__=='__main__':
             with open(f'results_lil_1.npz', 'wb') as f:
                 np.savez(f, all_folds_errors)
             print(time()-rt)
+
+        elif test_num==3:
+            print("test number = 3")
+            folds_errors = []
+            errors = []
+            run = 0
+            from time import time
+            rt = time()
+            for fold in range(1):
+                for pnt in range(1):
+                    settings = []
+                    print('-'*10)
+                    print(f"Test, Landmark: {pnt}, Fold: {fold}", )
+                    path = f"Models/big_hybrid_{pnt}_{fold}.pt"
+                    settings.append({'loadpath': path})
+                    # test on 1 image from cephalo dataset
+                    errors.append(test_cephalo(settings, [pnt], fold=1, num_folds=2, fold_size=3))
+            all_errors = np.stack(errors)
+            folds_errors.append(all_errors)
+
+            all_folds_errors = np.stack(folds_errors)
+            print(all_errors.mean())
+            with open(f'results_big.npz', 'wb') as f:
+                np.savez(f, all_folds_errors)
+            print(f"Total time: {time()-rt}s")
 
         else:
             all()
