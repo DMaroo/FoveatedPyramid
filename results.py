@@ -61,8 +61,16 @@ elif ver==5:
     with open('doctors_lil2.npz', 'rb') as f:
         doc = np.load(f)['arr_0']
 
+elif ver==6:
+    predictions = [ ]
+    with open('cephalo_result.npz', 'rb') as f:
+        res = np.load(f)['arr_0']
 
-print(res.shape)
+    with open('doctors_lil2.npz', 'rb') as f:
+        doc = np.load(f)['arr_0']
+
+
+print(res)
 
 names = [
 "Sella (L1)",

@@ -16,6 +16,12 @@ from pyramid import pyramid, stack, pyramid_transform
 import sys
 import pdb
 
+"""
+List image sizes with: identify -format "%i: %wx%h\n" *.jpg
+These images have 2256x2304 instead of 2260x2304 size
+rm 1234.jpg 1240.jpg 134.jpg 159.jpg 188.jpg 254.jpg 435.jpg 608.jpg 609.jpg 759.jpg 769.jpg 779.jpg 938.jpg 1107.jpg
+"""
+
 IMG_SIZE_ORIGINAL = {'width': 2260, 'height': 2304}
 IMG_SIZE_ROUNDED_TO_64 = {'width': 2304, 'height': 2304}
 IMG_TRANSFORM_PADDING = {'width': IMG_SIZE_ROUNDED_TO_64['width'] - IMG_SIZE_ORIGINAL['width'],
@@ -170,6 +176,7 @@ def test_cephalo(settings, landmarks,fold=3, num_folds =4, fold_size=100):
             # doc_errors.append(F.mse_loss(junior_labels, senior_labels, reduction='none').sum(dim=2).sqrt())
 
     errors = torch.cat(errors,0).detach().cpu().numpy()/2*192
+    predict_landmarks = torch.cat(predict_landmarks, 0).squeeze().detach().cpu().numpy()
     # doc_errors = torch.cat(doc_errors,0).detach().cpu().numpy()/2*192
 
     # doc_error = doc_errors.mean(0)
@@ -308,7 +315,7 @@ if __name__=='__main__':
         plt.imshow(image, cmap='gray')
         plt.scatter(landmarks[:, 0], landmarks[:, 1], s=10, marker='.', c='r')
         if ground_truth is not None:
-            plt.scatter(ground_truth[:, 0], ground_truth[:, 1], s=10, marker='.', c='g')
+            plt.scatter(ground_truth[:, 0], ground_truth[:, 1], s=10, marker='.', c='b')
         plt.pause(0.001)  # pause a bit so that plots are updated
 
     if len(sys.argv)>1:
@@ -365,8 +372,11 @@ if __name__=='__main__':
 
         elif test_num==3:
             print("test number = 3")
+            predicted_landmarks = []
+            folds_predictions = []
             folds_errors = []
             errors = []
+
             run = 0
             from time import time
             rt = time()
@@ -382,26 +392,25 @@ if __name__=='__main__':
                     path = f"Models/big_hybrid_{isbi_pnt}_{fold}.pt"
                     settings.append({'loadpath': path})
                     # test on 1 image from cephalo dataset
-                    predict_landmarks, predict_errors = test_cephalo(settings, [cephalo_pnt], fold=1, num_folds=2, fold_size=4)
+                    predict_landmarks, predict_errors = test_cephalo(settings, [cephalo_pnt], fold=0, num_folds=2, fold_size=150)
 
-                    xrays = CephaloXrayData.TransformedXrays(indices=[4], landmarks=[cephalo_pnt])[0]
-                    middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
-                    one_predicted_point = predict_landmarks[0][0].numpy()
-
-                    recreated_points = ((one_predicted_point*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
-                    recreated_points_gt = ((xrays[1]*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
-                    plt.figure()
-                    print("ground truth:", xrays[1])
-                    print("diff:", xrays[1] - recreated_points)
-                    show_landmarks(xrays[0].numpy().transpose((1, 2, 0)), recreated_points, ground_truth=recreated_points_gt)
-                    plt.show()
+                    predicted_landmarks.append(predict_landmarks)
                     errors.append(predict_errors)
+
+            all_predictions = np.stack(predicted_landmarks)
             all_errors = np.stack(errors)
+
+            folds_predictions.append(all_predictions)
             folds_errors.append(all_errors)
 
+            all_fold_predictions = np.stack(folds_predictions)
             all_folds_errors = np.stack(folds_errors)
+
+            print(all_fold_predictions)
             print(all_errors.mean())
-            with open(f'results_big.npz', 'wb') as f:
+            with open(f'cephalo_predictions.npz', 'wb') as f:
+                np.savez(f, all_fold_predictions)
+            with open(f'cephalo_result.npz', 'wb') as f:
                 np.savez(f, all_folds_errors)
             print(f"Total time: {time()-rt}s")
 
