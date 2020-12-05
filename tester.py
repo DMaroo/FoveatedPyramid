@@ -43,7 +43,7 @@ def test_cephalo(settings, landmarks,fold=3, num_folds =4, fold_size=100):
 
     batchsize=2
     levels = 6
-    device = 'cpu'
+    device = 'cuda'
     output_count=len(landmarks)
 
     # splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)

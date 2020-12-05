@@ -163,7 +163,7 @@ class PyramidAttention(nn.Module):
 def load_model(levels,name,load=False):
     model = PyramidAttention(levels)
 
-    device = 'cpu'
+    device = 'cuda'
 
     if load:
         if device=='cuda':
