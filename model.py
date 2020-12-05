@@ -163,10 +163,16 @@ class PyramidAttention(nn.Module):
 def load_model(levels,name,load=False):
     model = PyramidAttention(levels)
 
-    if load:
-        model.load_state_dict(torch.load(f"Models/{name}.pt"))
+    device = 'cpu'
 
-    model.to('cuda')
+    if load:
+        if device=='cuda':
+            model.load_state_dict(torch.load(f"Models/{name}.pt"))
+        elif device=='cpu':
+            model.load_state_dict(torch.load(f"Models/{name}.pt", map_location=torch.device('cpu')))
+
+    model.to(device)
+
     return model
 
 def save_model(model, name):

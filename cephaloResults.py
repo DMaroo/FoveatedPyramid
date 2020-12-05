@@ -3,41 +3,7 @@ from math import sqrt
 import sys
 import matplotlib.pyplot as plt
 import CephaloXrayData
-
-IMG_SIZE_ORIGINAL = {'width': 2260, 'height': 2304}
-IMG_SIZE_ROUNDED_TO_64 = {'width': 2304, 'height': 2304}
-IMG_TRANSFORM_PADDING = {'width': IMG_SIZE_ROUNDED_TO_64['width'] - IMG_SIZE_ORIGINAL['width'],
-                        'height': IMG_SIZE_ROUNDED_TO_64['height']- IMG_SIZE_ORIGINAL['height']}
-ISBI_TO_CEPHALO_MAPPING = {
-"Columella"                : {'isbi': None, 'cephalo': 0},
-"Subnasale"                : {'isbi': 14, 'cephalo': 1},
-"Upper lip"                : {'isbi': 12, 'cephalo': 2},
-"Pogonion"                 : {'isbi': 15, 'cephalo': 3},
-"Nasion"                   : {'isbi': 1, 'cephalo': 4},
-"Anterior nasal spine"     : {'isbi': 17, 'cephalo': 5},
-"Subspinale"               : {'isbi': 4, 'cephalo': 6},
-"Point B"                  : {'isbi': None, 'cephalo': 7},
-"Pogonion"                 : {'isbi': 6, 'cephalo': 8},
-"Gnathion"                 : {'isbi': 8, 'cephalo': 9},
-"U1 root tip"              : {'isbi': None, 'cephalo': 10},
-"U1 incisal edge"          : {'isbi': None, 'cephalo': 11},
-"L1 incisal edge"          : {'isbi': None, 'cephalo': 12},
-"L1 root tip"              : {'isbi': None, 'cephalo': 13},
-"Sella"                    : {'isbi': 0, 'cephalo': 14},
-"Articulare"               : {'isbi': 18, 'cephalo': 15},
-"Basion"                   : {'isbi': None, 'cephalo': 16},
-"Posterior nasal spine"    : {'isbi': 16, 'cephalo': 17},
-"Gonion constructed"       : {'isbi': None, 'cephalo': 18},
-"Tuberositas messenterica" : {'isbi': None, 'cephalo': 19},
-"Orbitale"                 : {'isbi': 2, 'cephalo': None},
-"Porion"                   : {'isbi': 3, 'cephalo': None},
-"Supramentale"             : {'isbi': 5, 'cephalo': None},
-"Menton"                   : {'isbi': 7, 'cephalo': None},
-"Gonion"                   : {'isbi': 9, 'cephalo': None},
-"Incision inferis"         : {'isbi': 10, 'cephalo': None},
-"Incision superius"        : {'isbi': 11, 'cephalo': None},
-"Lower lip"                : {'isbi': 13, 'cephalo': None}
-}
+import cephaloConstants
 
 def show_landmarks(image, landmarks, ground_truth=None):
     """Show image with landmarks"""
@@ -68,26 +34,27 @@ if ver==1:
 
 
 
-names = [
-"Sella (L1)",
-"Nasion (L2)",
-"Orbitale (L3)",
-"Porion (L4)",
-"Subspinale (L5)",
-"Supramentale (L6)",
-"Pogonion (L7)",
-"Menton (L8)",
-"Gnathion (L9)",
-"Gonion (L10)",
-"Incision inferius (L11)",
-"Incision superius (L12)",
-"Upper lip (L13)",
-"Lower lip (L14)",
-"Subnasale (L15)",
-"Soft tissue pogonion (L16)",
-"Posterior nasal spine (L17)",
-"Anterior nasal spine (L18)",
-"Articulare (L19)",]
+names = [f"{x[0]}, ISBI: L{x[1]+1}, Cephalo: L{x[2]}" for x in cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()]
+# names = [
+# "Sella (L1)",
+# "Nasion (L2)",
+# "Orbitale (L3)",
+# "Porion (L4)",
+# "Subspinale (L5)",
+# "Supramentale (L6)",
+# "Pogonion (L7)",
+# "Menton (L8)",
+# "Gnathion (L9)",
+# "Gonion (L10)",
+# "Incision inferius (L11)",
+# "Incision superius (L12)",
+# "Upper lip (L13)",
+# "Lower lip (L14)",
+# "Subnasale (L15)",
+# "Soft tissue pogonion (L16)",
+# "Posterior nasal spine (L17)",
+# "Anterior nasal spine (L18)",
+# "Articulare (L19)",]
 
 str = "Landmark & PEL (mm) & SDR 2.0mm & SDR 2.5mm & SDR 3.0mm & SDR 4.0mm\\\\\n"
 
@@ -126,7 +93,10 @@ if ver==1:
     fig.legend(lines, labels, loc = 'upper center')
     plt.show()
 
+
 numel = res.shape[2] #numel = number_of_elements
+# res = np.reshape(res, (11, 4, 150, 1))
+
 for i, r in enumerate(res):
     rm = f"{r.mean():2.2f}"
 

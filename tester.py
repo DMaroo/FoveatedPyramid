@@ -15,6 +15,7 @@ import torch.nn.functional as F
 from pyramid import pyramid, stack, pyramid_transform
 import sys
 import pdb
+import cephaloConstants
 
 """
 List image sizes with: identify -format "%i: %wx%h\n" *.jpg
@@ -22,42 +23,7 @@ These images have 2256x2304 instead of 2260x2304 size
 rm 1234.jpg 1240.jpg 134.jpg 159.jpg 188.jpg 254.jpg 435.jpg 608.jpg 609.jpg 759.jpg 769.jpg 779.jpg 938.jpg 1107.jpg
 """
 
-IMG_SIZE_ORIGINAL = {'width': 2260, 'height': 2304}
-IMG_SIZE_ROUNDED_TO_64 = {'width': 2304, 'height': 2304}
-IMG_TRANSFORM_PADDING = {'width': IMG_SIZE_ROUNDED_TO_64['width'] - IMG_SIZE_ORIGINAL['width'],
-                        'height': IMG_SIZE_ROUNDED_TO_64['height']- IMG_SIZE_ORIGINAL['height']}
-ISBI_TO_CEPHALO_MAPPING = {
-"Columella"                : {'isbi': None, 'cephalo': 0},
-"Subnasale"                : {'isbi': 14, 'cephalo': 1},
-"Upper lip"                : {'isbi': 12, 'cephalo': 2},
-"Pogonion"                 : {'isbi': 15, 'cephalo': 3},
-"Nasion"                   : {'isbi': 1, 'cephalo': 4},
-"Anterior nasal spine"     : {'isbi': 17, 'cephalo': 5},
-"Subspinale"               : {'isbi': 4, 'cephalo': 6},
-"Point B"                  : {'isbi': None, 'cephalo': 7},
-"Pogonion"                 : {'isbi': 6, 'cephalo': 8},
-"Gnathion"                 : {'isbi': 8, 'cephalo': 9},
-"U1 root tip"              : {'isbi': None, 'cephalo': 10},
-"U1 incisal edge"          : {'isbi': None, 'cephalo': 11},
-"L1 incisal edge"          : {'isbi': None, 'cephalo': 12},
-"L1 root tip"              : {'isbi': None, 'cephalo': 13},
-"Sella"                    : {'isbi': 0, 'cephalo': 14},
-"Articulare"               : {'isbi': 18, 'cephalo': 15},
-"Basion"                   : {'isbi': None, 'cephalo': 16},
-"Posterior nasal spine"    : {'isbi': 16, 'cephalo': 17},
-"Gonion constructed"       : {'isbi': None, 'cephalo': 18},
-"Tuberositas messenterica" : {'isbi': None, 'cephalo': 19},
-"Orbitale"                 : {'isbi': 2, 'cephalo': None},
-"Porion"                   : {'isbi': 3, 'cephalo': None},
-"Supramentale"             : {'isbi': 5, 'cephalo': None},
-"Menton"                   : {'isbi': 7, 'cephalo': None},
-"Gonion"                   : {'isbi': 9, 'cephalo': None},
-"Incision inferis"         : {'isbi': 10, 'cephalo': None},
-"Incision superius"        : {'isbi': 11, 'cephalo': None},
-"Lower lip"                : {'isbi': 13, 'cephalo': None}
-}
-
-def all():
+def all_models():
     folds_errors = []
     for fold in range(4):
         errors = []
@@ -320,7 +286,6 @@ if __name__=='__main__':
 
     if len(sys.argv)>1:
 
-
         test_num = int(sys.argv[1])
 
         if test_num==1:
@@ -381,14 +346,16 @@ if __name__=='__main__':
             from time import time
             rt = time()
 
+            pnt_tuples = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()[:1]
+
             for fold in range(1):
-                for pnt in range(1):
-                    isbi_pnt = ISBI_TO_CEPHALO_MAPPING["Sella"]['isbi']
-                    cephalo_pnt = ISBI_TO_CEPHALO_MAPPING["Sella"]['cephalo']
+                for pnt in pnt_tuples:
+                    isbi_pnt = pnt[1]
+                    cephalo_pnt = pnt[2]
 
                     settings = []
                     print('-'*10)
-                    print(f"Test, ISBI Landmark: {isbi_pnt}, Fold: {fold}", )
+                    print(f"Test, Name: {pnt[0]}, ISBI Landmark: {isbi_pnt}, Fold: {fold}", )
                     path = f"Models/big_hybrid_{isbi_pnt}_{fold}.pt"
                     settings.append({'loadpath': path})
                     # test on 1 image from cephalo dataset
@@ -415,7 +382,7 @@ if __name__=='__main__':
             print(f"Total time: {time()-rt}s")
 
         else:
-            all()
+            all_models()
 
     else:
         print(test([{'loadpath':"Models/test.pt"}],[11]).mean())
