@@ -32,6 +32,30 @@ if ver==1:
     with open('cephalo_predictions.npz', 'rb') as f:
         predictions = np.load(f)['arr_0']
 
+if ver == 2:
+
+    with open('results_lil_1.npz', 'rb') as f:
+        res = np.load(f)['arr_0']
+    predictions = res
+
+elif ver==3:
+    all_errors = []
+    pnt_tuples = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()
+    for run in range(4):
+        errors = []
+        for pnt_tuple in pnt_tuples:
+            (name, isbi_pnt, cephalo_pnt) = pnt_tuple
+            with open(f'Results/big_hybrid_{isbi_pnt}_{run}.npz', 'rb') as f:
+                err = np.load(f)['arr_0']
+                errors.append(err)
+        all_errors.append(np.stack(errors))
+    res = np.stack(all_errors)
+    predictions = res
+
+    # with open('cephalo_predictions.npz', 'rb') as f:
+    #     predictions = np.load(f)['arr_0']
+
+
 
 
 names = [f"{x[0]}, ISBI: L{x[1]+1}, Cephalo: L{x[2]}" for x in cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()]
@@ -70,7 +94,7 @@ def rescale_point_to_original_size(point):
     return ((point*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
 
 if ver==1:
-    indices = range(150)
+    indices = range(0, 150, 9)
     indicies_to_plot = indices[4:8]
     val_xrays = CephaloXrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[ISBI_TO_CEPHALO_MAPPING["Sella"]['cephalo']])
     fig = plt.figure()

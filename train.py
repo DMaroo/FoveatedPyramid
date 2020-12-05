@@ -251,7 +251,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
 
     return last_error,best_error
 
-def cepahloTrain(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_folds=4, fold_size=100, graphical=False,iterations=10, avg_labels=False,rms=False):
+def train_cephalo(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_folds=4, fold_size=100, graphical=False,iterations=10, avg_labels=False,rms=False):
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
@@ -501,12 +501,21 @@ if __name__ == '__main__':
 
         elif test==5:
             print("transfer learning of 4 networks per landmark from isbi on 11 landmarks from cephalo")
+            pnts = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()[:1]
+            for fold in range(1):
+                for i in pnts:
+                    (name, isbi_pnt, cephalo_pnt) = i
+                    print(f"Running fold {fold}, point {name}, ISBI:{isbi_pnt}, Cephalo:{cephalo_pnt}")
+                    train_cephalo(f"big_hybrid_{isbi_pnt}_{fold}", [cephalo_pnt], batched=True, fold=fold, num_folds=4, fold_size=2682,iterations=10, load=True ,avg_labels=False)
+
+        elif test==6:
+            print("train 1 netwrok on 4 images for each 11 landamrk unnion between isbi and cephalo")
             pnts = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()
             for fold in range(1):
                 for i in pnts:
                     (name, isbi_pnt, cephalo_pnt) = i
                     print(f"Running fold {fold}, point {name}, ISBI:{isbi_pnt}, Cephalo:{cephalo_pnt}")
-                    cepahloTrain(f"big_hybrid_{isbi_pnt}_{fold}", [cephalo_pnt], batched=True, fold=fold, num_folds=2, fold_size=4,iterations=10, load=True ,avg_labels=False)
+                    train_cephalo(f"single_{isbi_pnt}", [cephalo_pnt], batched=True, fold=fold, num_folds=2, fold_size=3,iterations=10, load=False ,avg_labels=False)
 
         elif test==2:
             print("RUNNING SMALL TEST") #over 4 points

@@ -335,6 +335,38 @@ if __name__=='__main__':
                 np.savez(f, all_folds_errors)
             print(time()-rt)
 
+        elif test_num==4:
+            folds_errors = []
+            errors = []
+            predicted_landmarks = []
+            run = 0
+            from time import time
+            rt = time()
+            pnt_tuples = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()[:1]
+
+            for pnt in pnt_tuples:
+                settings = []
+                print('-'*10)
+                (name, pnt_isbi, pnt_cephalo) = pnt
+                print("Test, Landmark: ", pnt_isbi)
+                path = f"Models/single_{pnt_isbi}.pt"
+                settings.append({'loadpath': path})
+
+                _, predict_errors = test_cephalo(settings, [pnt_cephalo], fold=1, num_folds=2, fold_size=150)
+
+                errors.append(predict_errors)
+
+            all_errors = np.stack(errors)
+
+            folds_errors.append(all_errors)
+
+            all_folds_errors = np.stack(folds_errors)
+
+            print(all_errors.mean())
+            with open(f'results_lil_1.npz', 'wb') as f:
+                np.savez(f, all_folds_errors)
+            print(time()-rt)
+
         elif test_num==3:
             print("test number = 3")
             predicted_landmarks = []

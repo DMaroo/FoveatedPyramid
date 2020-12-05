@@ -64,26 +64,92 @@ Articulare (L19) | **0.98** ± 1.23 | 1.06 ± 1.25 | 91.00 | 94.75 | 96.50 | 98.
 Average | **1.06** ± 0.95 | 1.07 ± 0.80 | 87.42 | 92.47 | 95.24 | 97.86|
 
 # How to run models on WUT-ML Cephalo dataset with GPU
-ISBI means dataset from ISBI challange: 400 images and 19 landmarks. Cephalo is short for Cephalomateric and refers to WUT-ML private dataset of 1000+ images, each with 20 landmarks. There is an overlap of 11 landmarks between the two datasets, it is those 11 models we will run.
+## Glossary
+ISBI means dataset from ISBI challange: 400 images and 19 landmarks.
 
-File Structure:
+Cephalo is short for Cephalomateric and refers to WUT-ML private dataset of 1000+ images, each with 20 landmarks. There is an overlap of 11 landmarks between the two datasets, it is those 11 models we will run.
+
+## Preparing The Data
+
+1. `git clone https://github.com/enymuss/FoveatedPyramid.git`
+2. You should have a folder called `Models` with 44 models, created by following "How to reproduce paper on GPU" above.
+3. Place Cephalo dataset into folder `data/2304/`. `data/2304/images/` should have 1192 images. Obtaining those images is left as an exercise to the reader.
+
+The resulting file structure is as follows:
 ```
+- FoveatedPyramid/
+  ...
+  - Models/
+    - big_hybrid_{isbi_landmark_number}_{fold_num}.pt
+    ...
+  - data/
+    - 2304/
+      - cephalo_landmarks.csv
+      - images/
+  ...
+```
+## Data Augmentation
+4. Run
+```
+python src/preprocessing/data_augmentation.py 0
+```
+
+  This does two things. Firstly, it takes all images in `data/2304/images`, rescales them to have 512px height with the same aspect ratio, and saves the copy of the image in `data/512/images/`.
+
+  Next, it creates 8 augmented images for each image in `data/512/images/` and saves them to `data/512/augmented_images/`.
+
+Result:
+```
+- FoveatedPyramid/
 ...
-Models/
-  - big_hybrid_{isbi_landmark_number}_{fold_num}.pt
-data/
-  - 512
-    - cephalo_landmarks.csv
-    - images/
-  - 2304
-    - cephalo_landmarks.csv
-    - images/
+  - data/
+    - 512/
+      - augmented_images/
+      - cephalo_landmarks.csv
+      - images/
+    - 2304/
+      - cephalo_landmarks.csv
+      - images/
 ...
 ```
 
-Remove images which do not have the same size as the rest of images:
+5. Move all images from  `512/augmented_images` to `512/images`
 ```
-List image sizes with: identify -format "%i: %wx%h\n" *.jpg
+find data/512/augmented_images/ -name '*.jpg' -exec mv {} data/512/images/ \;
+```
+
+## Training Models
+
+6. (Optional) `python CephaloXrayData.py` should plot one 512px image with the Sella Landmark (Landmark 1 in ISBI dataset).
+
+7. (Optional) To make a quick run, to test that everything works, you can run the following:
+```
+python train.py 6 && python tester.py 4 && python cephaloResults.py 2
+```
+
+8. Run the whole thing.
+```
+python train.py 5 && python cephaloResults.py 3
+```
+
+  `python train.py 5` does the following: It loads each model for which the landmark exists in Cephalo dataset. It trains it on the 512px images using 4-fold cross validation.
+
+  1 fold has 2682 images. The images are taken in sequence, so there is no overlap between train and validation dataset as 2682 images in sequence mean there are 2682/9=298 original images and it's augmentations.
+
+  The settings are as close as possible to the 4-fold cross validation done above on ISBI dataset.
+
+  `python cephaloResults.py 3` takes the .npz files created by the first command and prints a Latex table.
+
+9. (Optional) Visualise Some Cepahlo Images and Landmarks. Run:
+```
+python tester.py 3 && python cephaloResults.py 1
+```
+  This plots 4 images with Sella Landmark, ground truth and predictions.
+
+
+### Notes
+List image sizes with: `identify -format "%i: %wx%h\n" *.jpg`
 These images have 2256x2304 instead of 2260x2304 size
+```
 rm 1234.jpg 1240.jpg 134.jpg 159.jpg 188.jpg 254.jpg 435.jpg 608.jpg 609.jpg 759.jpg 769.jpg 779.jpg 938.jpg 1107.jpg
 ```
