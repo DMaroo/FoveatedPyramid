@@ -501,12 +501,21 @@ if __name__ == '__main__':
 
         elif test==5:
             print("transfer learning of 4 networks per landmark from isbi on 11 landmarks from cephalo")
-            pnts = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()[:1]
-            for fold in range(1):
+            pnts = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()
+            for fold in range(4):
                 for i in pnts:
                     (name, isbi_pnt, cephalo_pnt) = i
                     print(f"Running fold {fold}, point {name}, ISBI:{isbi_pnt}, Cephalo:{cephalo_pnt}")
                     train_cephalo(f"big_hybrid_{isbi_pnt}_{fold}", [cephalo_pnt], batched=True, fold=fold, num_folds=4, fold_size=2682,iterations=10, load=True ,avg_labels=False)
+
+        elif test==7:
+            print("Train on all 20 cephalo landmarks from scratch")
+            pnts = cephaloConstants.cephalo_landmarks()
+            for fold in range(4):
+                for i in pnts:
+                    (name, cephalo_pnt) = i
+                    print(f"Running fold {fold}, point {name}, Cephalo:{cephalo_pnt}")
+                    train_cephalo(f"big_cephalo_{cephalo_pnt}_{fold}", [cephalo_pnt], batched=True, fold=fold, num_folds=4, fold_size=2682, iterations=10, load=False ,avg_labels=False)
 
         elif test==6:
             print("train 1 netwrok on 4 images for each 11 landamrk unnion between isbi and cephalo")

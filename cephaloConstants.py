@@ -44,3 +44,14 @@ def filter_and_sort_isbi_to_cephalo_mapping():
             valid_mapping_list.append(points_tuple)
 
     return sorted(valid_mapping_list, key=lambda x: x[1])
+
+def cephalo_landmarks():
+    mapping_list = [(k, v["cephalo"]) for k, v in ISBI_TO_CEPHALO_MAPPING.items()]
+    valid_mapping_list = []
+
+    # filter tuples with None values
+    for points_tuple in mapping_list:
+        if not any(map(lambda x: x is None, points_tuple)):
+            valid_mapping_list.append(points_tuple)
+
+    return sorted(valid_mapping_list, key=lambda x: x[1])

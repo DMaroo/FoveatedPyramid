@@ -128,11 +128,12 @@ python train.py 6 && python tester.py 4 && python cephaloResults.py 2
 ```
 
 8. Run the whole thing.
-```
-python train.py 5 && python cephaloResults.py 3
-```
+a) `python train.py 5 && python cephaloResults.py 3`
+b) `python train.py 7 && python cephaloResults.py 3`
 
   `python train.py 5` does the following: It loads each model for which the landmark exists in Cephalo dataset. It trains it on the 512px images using 4-fold cross validation.
+
+  `python train.py 7` does the same thing, but creates the model from scratch.
 
   1 fold has 2682 images. The images are taken in sequence, so there is no overlap between train and validation dataset as 2682 images in sequence mean there are 2682/9=298 original images and it's augmentations.
 
