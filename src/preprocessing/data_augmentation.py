@@ -7,6 +7,7 @@ import imgaug.augmenters as iaa
 import imgaug.parameters as iap
 from imgaug.augmentables.kps import Keypoint, KeypointsOnImage
 from imgaug.augmenters import Sequential
+import sys
 
 seq = iaa.Sequential([
     iaa.Affine(
@@ -32,7 +33,7 @@ class DataAugmentator(object):
     """
 
     def __init__(self, seq: Sequential = None, landmarks_num: int = None, batch_size: int = None,
-                 images_dir: str = None, annotation_dir: str = None, masks_dir: str = None, output_dir: str = None):
+                 images_dir: str = None, annotation_dir: str = None, masks_dir: str = None, output_dir: str = None, output_annotation_dir: str = ""):
         self.seq = seq
         self.landmarks_num = landmarks_num
         self.batch_size = batch_size
@@ -41,6 +42,7 @@ class DataAugmentator(object):
         self.annotation_dir = annotation_dir
         self.masks_dir = masks_dir
         self.output_dir = output_dir
+        self.output_annotation_dir = output_annotation_dir
 
         self.landmarks = pd.read_csv(self.annotation_dir, delimiter=",")
         self.landmarks["filename"].sort_values()
@@ -51,6 +53,14 @@ class DataAugmentator(object):
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+
+        if output_annotation_dir:
+            if os.path.exists(self.output_annotation_dir):
+                df = pd.DataFrame(columns=self.landmarks.columns)
+                df.to_csv(self.output_annotation_dir, index=False)
+            else:
+                if not os.path.exists(os.path.dirname(self.output_annotation_dir)):
+                    os.makedirs(os.path.dirname(self.output_annotation_dir))
 
     def augment_image(self, image, landmarks):
         """
@@ -78,13 +88,20 @@ class DataAugmentator(object):
         """
            Generates a batch of augmented images with landmarks for images specified in input folder.
            Generates landmarks for augmented images and append them to annotation file.
+           If output_annotation_dir is defined, creates new annotation file with new values.
         """
         images_aug_list = []
         kpsois_aug_list = []
 
+        print("Images: ", len(self.images))
+
         for image in self.images:
+            # might be faster to iterate over each element in landmarks, as then you don't have to do find_image_landmarks() each time.
             image_read = ia.cv2.imread(image)
-            image_landmarks = self.find_image_landmarks(image)
+            image_landmarks = self.find_image_landmarks(os.path.basename(image))
+            if image_landmarks is None:
+                print(f"No image landmarks for {image}")
+                continue
             image_name = image_landmarks["filename"]
             print('Augment image: {}'.format(image_name))
             images_aug, kpsois_aug = self.augment_image(image_read, image_landmarks)
@@ -94,7 +111,10 @@ class DataAugmentator(object):
                 images_aug_list.append(image)
                 kpsois_aug_list.append(kpsois)
 
-                with open(self.annotation_dir, 'a', newline='') as file:
+
+                output_annotation_path = self.output_annotation_dir if self.output_annotation_dir else self.annotation_dir
+
+                with open(output_annotation_path, 'a', newline='') as file:
                     points_arrays = [kpsoi.xy for kpsoi in kpsois]
                     points = np.concatenate(points_arrays, axis=0)
                     row_of_points = ','.join([repr(num) for num in points])
@@ -104,18 +124,60 @@ class DataAugmentator(object):
         return images_aug_list, kpsois_aug_list
 
     def find_image_landmarks(self, image):
+        """
+        change fixes bug:
+        Image path: data/2304/images/1102.jpg
+        Augment image: 102.jpg
+        """
         for _, landmarks in self.landmarks.iterrows():
-            if landmarks["filename"] in image:
+            if landmarks["filename"] == image:
                 return landmarks
+        return None
 
 
 if __name__ == "__main__":
-    da = DataAugmentator(seq=seq,
-                         landmarks_num=20,
-                         batch_size=20,
-                         images_dir="../../data/images/",
-                         masks_dir="../../data/masks/",
-                         annotation_dir="../../data/cephalolandmarks.csv",
-                         output_dir="../../augmented_images/")
+    da = None
+    if len(sys.argv)>1:
+        test = int(sys.argv[1])
+        if test == 0:
+            """
+            Scale original images to 512px and move them to new folder
+            Create new landmarks csv file for those images
+            Perform Augmentation on rescaled images and append to newly created csv
+            """
+            seq_scale = iaa.Sequential([
+                iaa.Resize(size={"height": 512 , "width": "keep-aspect-ratio"})
+            ])
 
-    images_aug_list, kpsois_aug_list = da.augment_images()
+            da = DataAugmentator(seq=seq_scale,
+                                 landmarks_num=20,
+                                 batch_size=1,
+                                 images_dir="data/2304/images/",
+                                 masks_dir="",
+                                 annotation_dir="data/2304/cephalo_landmarks.csv",
+                                 output_dir="data/512/images/",
+                                 output_annotation_dir="data/512/cephalo_landmarks.csv")
+
+            images_aug_list, kpsois_aug_list = da.augment_images()
+
+            da = DataAugmentator(seq=seq,
+                                 landmarks_num=20,
+                                 batch_size=8,
+                                 images_dir="data/512/images/",
+                                 masks_dir="",
+                                 annotation_dir="data/512/cephalo_landmarks.csv",
+                                 output_dir="data/512/augmented_images/",
+                                 output_annotation_dir="")
+
+            images_aug_list, kpsois_aug_list = da.augment_images()
+
+    else:
+        da = DataAugmentator(seq=seq,
+                             landmarks_num=20,
+                             batch_size=20,
+                             images_dir="../../data/images/",
+                             masks_dir="../../data/masks/",
+                             annotation_dir="../../data/cephalolandmarks.csv",
+                             output_dir="../../augmented_images/")
+
+        images_aug_list, kpsois_aug_list = da.augment_images()
