@@ -30,7 +30,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
-    num_epochs=2
+    num_epochs=40
     device = 'cuda'
 
 
