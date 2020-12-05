@@ -62,3 +62,21 @@ Posterior nasal spine (L17) | 0.93 ± 0.83 | **0.72** ± 0.59 | 93.50 | 96.50 | 
 Anterior nasal spine (L18) | 1.34 ± 1.18 | **0.91** ± 0.82 | 78.00 | 84.25 | 89.25 | 94.50|
 Articulare (L19) | **0.98** ± 1.23 | 1.06 ± 1.25 | 91.00 | 94.75 | 96.50 | 98.00|
 Average | **1.06** ± 0.95 | 1.07 ± 0.80 | 87.42 | 92.47 | 95.24 | 97.86|
+
+# How to run models on WUT-ML Cephalo dataset
+ISBI means dataset from ISBI challange: 400 images and 19 landmarks. Cephalo is short for Cephalomateric and refers to WUT-ML private dataset of 1000+ images, each with 20 landmarks. There is an overlap of 11 landmarks between the two datasets, it is those 11 models we will run.
+
+File Structure:
+```
+...
+Models/
+  - big_hybrid_{isbi_landmark_number}_{fold_num}.pt
+data/
+  - 512
+    - cephalo_landmarks.csv
+    - images/
+  - 2304
+    - cephalo_landmarks.csv
+    - images/
+...
+```

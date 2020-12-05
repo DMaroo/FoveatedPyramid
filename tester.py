@@ -350,12 +350,11 @@ if __name__=='__main__':
 
             for fold in range(1):
                 for pnt in pnt_tuples:
-                    isbi_pnt = pnt[1]
-                    cephalo_pnt = pnt[2]
+                    (name, isbi_pnt, cephalo_pnt) = pnt
 
                     settings = []
                     print('-'*10)
-                    print(f"Test, Name: {pnt[0]}, ISBI Landmark: {isbi_pnt}, Fold: {fold}", )
+                    print(f"Test, Name: {name}, ISBI Landmark: {isbi_pnt}, Fold: {fold}", )
                     path = f"Models/big_hybrid_{isbi_pnt}_{fold}.pt"
                     settings.append({'loadpath': path})
                     # test on 1 image from cephalo dataset
