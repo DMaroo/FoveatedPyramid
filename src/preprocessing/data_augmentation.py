@@ -55,12 +55,11 @@ class DataAugmentator(object):
             os.makedirs(self.output_dir)
 
         if output_annotation_dir:
-            if os.path.exists(self.output_annotation_dir):
-                df = pd.DataFrame(columns=self.landmarks.columns)
-                df.to_csv(self.output_annotation_dir, index=False)
-            else:
+            if not os.path.exists(self.output_annotation_dir):
                 if not os.path.exists(os.path.dirname(self.output_annotation_dir)):
                     os.makedirs(os.path.dirname(self.output_annotation_dir))
+            df = pd.DataFrame(columns=self.landmarks.columns)
+            df.to_csv(self.output_annotation_dir, index=False)
 
     def augment_image(self, image, landmarks):
         """
