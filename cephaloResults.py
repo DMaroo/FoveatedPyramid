@@ -52,13 +52,34 @@ elif ver==3:
     res = np.stack(all_errors)
     predictions = res
 
-    # with open('cephalo_predictions.npz', 'rb') as f:
-    #     predictions = np.load(f)['arr_0']
+elif ver==4:
+    all_errors = []
+    pnt_tuples = cephaloConstants.cephalo_landmarks()
+    for run in range(4):
+        errors = []
+        for pnt_tuple in pnt_tuples:
+            (name, cephalo_pnt) = pnt_tuple
+            try:
+                with open(f'Results/big_cephalo_{cephalo_pnt}_{run}.npz', 'rb') as f:
+                    # import pdb; pdb.set_trace()
+                    err = np.load(f)['arr_0']
+                    errors.append(err)
+            except EnvironmentError:
+                print(f"Model for landmark {cephalo_pnt}, run {run}, does not exist. Exiting")
+                break
+        if errors:
+            all_errors.append(np.stack(errors))
+
+    res = np.stack(all_errors)
+    predictions = res
 
 
 
 
-names = [f"{x[0]}, ISBI: L{x[1]+1}, Cephalo: L{x[2]}" for x in cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()]
+
+
+
+names = [f"{x[0]}, Cephalo: L{x[1]}" for x in cephaloConstants.cephalo_landmarks()]
 # names = [
 # "Sella (L1)",
 # "Nasion (L2)",
@@ -90,13 +111,13 @@ predictions = predictions.transpose(1,0,2,3)
 print(res.shape)
 
 def rescale_point_to_original_size(point):
-    middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
-    return ((point*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
+    middle = np.array([cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'], cephaloConstants.IMG_SIZE_ROUNDED_TO_64['height']]) / 2
+    return ((point*cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
 
 if ver==1:
     indices = range(0, 150, 9)
     indicies_to_plot = indices[4:8]
-    val_xrays = CephaloXrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[ISBI_TO_CEPHALO_MAPPING["Sella"]['cephalo']])
+    val_xrays = CephaloXrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[cephaloConstants.cephalo_landmarks()[0][1]])
     fig = plt.figure()
     for i, xray in enumerate(val_xrays):
         one_predicted_point = predictions[0][0][i]

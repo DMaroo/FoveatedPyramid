@@ -37,13 +37,31 @@ def all_models():
     with open(f'results_big.npz', 'wb') as f:
         np.savez(f, all_folds_errors)
 
+IMG_SIZE_ORIGINAL = {'width': 1935, 'height': 2400}
+IMG_SIZE_ROUNDED_TO_64 = {'width': 1920, 'height': 2432}
+IMG_TRANSFORM_PADDING = {'width': IMG_SIZE_ROUNDED_TO_64['width'] - IMG_SIZE_ORIGINAL['width'],
+                        'height': IMG_SIZE_ROUNDED_TO_64['height']- IMG_SIZE_ORIGINAL['height']}
+
+def rescale_point_to_original_size(point):
+    middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
+    return ((point*IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
+
+def show_landmarks(image, landmarks, ground_truth=None):
+    """Show image with landmarks"""
+    plt.imshow(image, cmap='gray')
+    pdb.set_trace()
+    plt.scatter(landmarks[:, 0], landmarks[:, 1], s=10, marker='.', c='r', label="Prediction")
+    if ground_truth is not None:
+        plt.scatter(ground_truth[:, 0], ground_truth[:, 1], s=10, marker='.', c='b', label="Ground Truth")
+    plt.figlegend('', ('Red', 'Blue'), 'center left')
+    plt.pause(0.001)  # pause a bit so that plots are updated
 
 def test_cephalo(settings, landmarks,fold=3, num_folds =4, fold_size=100):
     print("TEST")
 
     batchsize=2
     levels = 6
-    device = 'cuda'
+    device = 'cpu'
     output_count=len(landmarks)
 
     # splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
@@ -160,7 +178,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
 
 
     batchsize=2
-    device = 'cuda'
+    device = 'cpu'
 
     splits, datasets, dataloaders, _ = XrayData.get_folded(landmarks,batchsize=batchsize, fold=fold, num_folds=num_folds, fold_size=fold_size)
 
@@ -207,7 +225,6 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     for i in range(len(dataloaders[phase])):
         batch = next_batch
         inputs, junior_labels, senior_labels = batch
-        breakpoint()
 
         if i + 2 != len(dataloaders[phase]):
             # start copying data of next batch
@@ -252,6 +269,13 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
 
             avg = torch.stack(all_outputs,0).mean(0)
 
+            # show landmarks for avg
+            plt.figure()
+            show_landmarks(annos[0][0], rescale_point_to_original_size(avg[0].numpy()), rescale_point_to_original_size(labels_tensor[0].numpy()))
+            plt.show()
+            return []
+            # show image annos[1][0]
+
             loss = criterion(avg, labels_tensor)
 
             error = loss.detach().sum(dim=2).sqrt()
@@ -275,14 +299,6 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
 
 if __name__=='__main__':
     import matplotlib.pyplot as plt
-
-    def show_landmarks(image, landmarks, ground_truth=None):
-        """Show image with landmarks"""
-        plt.imshow(image, cmap='gray')
-        plt.scatter(landmarks[:, 0], landmarks[:, 1], s=10, marker='.', c='r')
-        if ground_truth is not None:
-            plt.scatter(ground_truth[:, 0], ground_truth[:, 1], s=10, marker='.', c='b')
-        plt.pause(0.001)  # pause a bit so that plots are updated
 
     if len(sys.argv)>1:
 
@@ -388,6 +404,51 @@ if __name__=='__main__':
                     print('-'*10)
                     print(f"Test, Name: {name}, ISBI Landmark: {isbi_pnt}, Fold: {fold}", )
                     path = f"Models/big_hybrid_{isbi_pnt}_{fold}.pt"
+                    settings.append({'loadpath': path})
+                    # test on 1 image from cephalo dataset
+                    predict_landmarks, predict_errors = test(settings, [isbi_pnt], fold=0, num_folds=2, fold_size=150)
+
+                    predicted_landmarks.append(predict_landmarks)
+                    errors.append(predict_errors)
+
+            all_predictions = np.stack(predicted_landmarks)
+            all_errors = np.stack(errors)
+
+            folds_predictions.append(all_predictions)
+            folds_errors.append(all_errors)
+
+            all_fold_predictions = np.stack(folds_predictions)
+            all_folds_errors = np.stack(folds_errors)
+
+            print(all_fold_predictions)
+            print(all_errors.mean())
+            with open(f'isbi_predictions.npz', 'wb') as f:
+                np.savez(f, all_fold_predictions)
+            with open(f'isbi_result.npz', 'wb') as f:
+                np.savez(f, all_folds_errors)
+            print(f"Total time: {time()-rt}s")
+
+        elif test_num==5:
+            print("test number = 5, 1st cephalo landmark on 1st 150 images")
+            predicted_landmarks = []
+            folds_predictions = []
+            folds_errors = []
+            errors = []
+
+            run = 0
+            from time import time
+            rt = time()
+
+            pnt_tuples = cephaloConstants.cephalo_landmarks()[:1]
+
+            for fold in range(1):
+                for pnt in pnt_tuples:
+                    (name, cephalo_pnt) = pnt
+
+                    settings = []
+                    print('-'*10)
+                    print(f"Test, Name: {name}, ISBI Landmark: {cephalo_pnt}, Fold: {fold}", )
+                    path = f"Models/big_cephalo_{cephalo_pnt}_{fold}.pt"
                     settings.append({'loadpath': path})
                     # test on 1 image from cephalo dataset
                     predict_landmarks, predict_errors = test_cephalo(settings, [cephalo_pnt], fold=0, num_folds=2, fold_size=150)
