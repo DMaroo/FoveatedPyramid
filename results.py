@@ -1,6 +1,8 @@
 import numpy as np
 from math import sqrt
 import sys
+from cephaloResults import show_landmarks
+
 ver = int(sys.argv[1])
 if ver==1:
     with open('results_lil_1.npz', 'rb') as f:
@@ -63,6 +65,13 @@ elif ver==5:
 
 elif ver==6:
     predictions = [ ]
+    with open('isbi_result.npz', 'rb') as f:
+        res = np.load(f)['arr_0']
+
+    with open('isbi_predictions.npz', 'rb') as f:
+        predictions = np.load(f)['arr_0']
+
+elif ver==7:
     with open('cephalo_result.npz', 'rb') as f:
         res = np.load(f)['arr_0']
 
@@ -71,6 +80,9 @@ elif ver==6:
 
 
 print(res)
+print(predictions)
+
+import pdb; set_trace()
 
 names = [
 "Sella (L1)",
@@ -102,18 +114,18 @@ doc = doc.transpose(1,0,2,3)
 
 print(res.shape)
 
-numel = res.shape[2] #numel = number_of_elements
-for i, r in enumerate(res):
-    d = doc[i]
-    rm = f"{r.mean():2.2f}"
-    dm = f"{d.mean():2.2f}"
-    if r.mean()<d.mean():
-        rm = "\\textbf{"+rm+"}"
-    else:
-        dm = "\\textbf{"+dm+"}"
-
-    str += f"{names[i]} & {rm} $\\pm$ {(r.std(1)).mean():2.2f} & {dm} $\\pm$ {(d.std(1)).mean():2.2f} & {((r < 2).sum(1) / numel * 100).mean():3.2f} & {((r < 2.5).sum(1) / numel * 100).mean():3.2f} & {((r < 3).sum(1) / numel * 100).mean():3.2f} & {((r < 4).sum(1) / numel * 100).mean():3.2f}\\\\\n"
-str+="\hline\n"
-str+=f"Average & \\textbf{{{res.mean():2.2f}}} $\\pm$ {(res.std(2)).mean():2.2f} & {doc.mean():2.2f} $\\pm$ {(doc.std(2)).mean():2.2f} & {((res<2).sum(2)/numel*100).mean():3.2f} & {((res<2.5).sum(2)/numel*100).mean():3.2f} & {((res<3).sum(2)/numel*100).mean():3.2f} & {((res<4).sum(2)/numel*100).mean():3.2f}\\\\\n"
-
-print(str)
+# numel = res.shape[2] #numel = number_of_elements
+# for i, r in enumerate(res):
+#     d = doc[i]
+#     rm = f"{r.mean():2.2f}"
+#     dm = f"{d.mean():2.2f}"
+#     if r.mean()<d.mean():
+#         rm = "\\textbf{"+rm+"}"
+#     else:
+#         dm = "\\textbf{"+dm+"}"
+#
+#     str += f"{names[i]} & {rm} $\\pm$ {(r.std(1)).mean():2.2f} & {dm} $\\pm$ {(d.std(1)).mean():2.2f} & {((r < 2).sum(1) / numel * 100).mean():3.2f} & {((r < 2.5).sum(1) / numel * 100).mean():3.2f} & {((r < 3).sum(1) / numel * 100).mean():3.2f} & {((r < 4).sum(1) / numel * 100).mean():3.2f}\\\\\n"
+# str+="\hline\n"
+# str+=f"Average & \\textbf{{{res.mean():2.2f}}} $\\pm$ {(res.std(2)).mean():2.2f} & {doc.mean():2.2f} $\\pm$ {(doc.std(2)).mean():2.2f} & {((res<2).sum(2)/numel*100).mean():3.2f} & {((res<2.5).sum(2)/numel*100).mean():3.2f} & {((res<3).sum(2)/numel*100).mean():3.2f} & {((res<4).sum(2)/numel*100).mean():3.2f}\\\\\n"
+#
+# print(str)

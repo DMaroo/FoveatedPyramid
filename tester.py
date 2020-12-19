@@ -48,8 +48,8 @@ def rescale_point_to_original_size(point):
 
 def show_landmarks(image, landmarks, ground_truth=None):
     """Show image with landmarks"""
-    plt.imshow(image, cmap='gray')
-    pdb.set_trace()
+    plt.imshow(image.permute(1, 2, 0), cmap='gray')
+    # pdb.set_trace()
     plt.scatter(landmarks[:, 0], landmarks[:, 1], s=10, marker='.', c='r', label="Prediction")
     if ground_truth is not None:
         plt.scatter(ground_truth[:, 0], ground_truth[:, 1], s=10, marker='.', c='b', label="Ground Truth")
@@ -271,9 +271,11 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
             avg = torch.stack(all_outputs,0).mean(0)
 
             # show landmarks for avg
-            plt.figure()
-            show_landmarks(annos[0][0], rescale_point_to_original_size(avg[0].numpy()), rescale_point_to_original_size(labels_tensor[0].numpy()))
-            plt.show()
+            for i in range(batchsize):
+                plt.figure()
+                show_landmarks(inputs[i], rescale_point_to_original_size(avg[i].numpy()), rescale_point_to_original_size(labels_tensor[i].numpy()))
+                plt.show()
+            pdb.set_trace()
 
             loss = criterion(avg, labels_tensor)
 
