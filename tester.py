@@ -221,6 +221,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
     start = time()
     errors = []
     doc_errors = []
+    predict_landmarks = []
     print("GOT HERE")
     for i in range(len(dataloaders[phase])):
         batch = next_batch
@@ -273,16 +274,16 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
             plt.figure()
             show_landmarks(annos[0][0], rescale_point_to_original_size(avg[0].numpy()), rescale_point_to_original_size(labels_tensor[0].numpy()))
             plt.show()
-            return []
-            # show image annos[1][0]
 
             loss = criterion(avg, labels_tensor)
 
             error = loss.detach().sum(dim=2).sqrt()
+            predict_landmarks.append(avg)
             errors.append(error)
             doc_errors.append(F.mse_loss(junior_labels, senior_labels, reduction='none').sum(dim=2).sqrt())
 
     errors = torch.cat(errors,0).detach().cpu().numpy()/2*192
+    predict_landmarks = torch.cat(predict_landmarks, 0).squeeze().detach().cpu().numpy()
     doc_errors = torch.cat(doc_errors,0).detach().cpu().numpy()/2*192
 
     doc_error = doc_errors.mean(0)
@@ -293,7 +294,7 @@ def test(settings, landmarks,fold=3, num_folds =4, fold_size=100, avg_labels=Tru
         print(f"Error {i}: {all_error[i]} (doctor: {doc_error[i]}")
 
     print(f"{phase} loss: {error} (doctors: {doc_errors.mean()} in: {time() - start}s")
-    return errors
+    return predict_landmarks, errors
 
 
 
