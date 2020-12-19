@@ -120,12 +120,12 @@ if ver==1:
     val_xrays = CephaloXrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[cephaloConstants.cephalo_landmarks()[0][1]])
     fig = plt.figure()
     for i, xray in enumerate(val_xrays):
-        one_predicted_point = predictions[0][0][i]
+        one_predicted_point = predictions[0][0][indicies_to_plot[i]]
         recreated_points = rescale_point_to_original_size(one_predicted_point)
         recreated_points_gt = rescale_point_to_original_size(xray[1])
         ax = plt.subplot(len(val_xrays)/2, 2, i+1)
         plt.tight_layout()
-        ax.set_title(f"Image Index: {indicies_to_plot[i]}, Error: {res[0][0][i][0]:2.4f}")
+        ax.set_title(f"Image Index: {indicies_to_plot[i]}, Error: {res[0][0][indicies_to_plot[i]][0]:2.4f}")
         plot_dict = {
         'image': xray[0].numpy().transpose((1, 2, 0)),
         'landmarks': np.expand_dims(recreated_points, 0),
