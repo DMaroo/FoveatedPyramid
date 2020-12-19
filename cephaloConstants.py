@@ -1,5 +1,11 @@
+# IMG_SIZE_ORIGINAL = {'width': 2260, 'height': 2304}
+# IMG_SIZE_ROUNDED_TO_64 = {'width': 2304, 'height': 2304}
+IMAGE_PATH='data/2304'
+
 IMG_SIZE_ORIGINAL = {'width': 502, 'height': 512}
 IMG_SIZE_ROUNDED_TO_64 = {'width': 512, 'height': 512}
+IMAGE_PATH='data/512'
+
 IMG_TRANSFORM_PADDING = {'width': IMG_SIZE_ROUNDED_TO_64['width'] - IMG_SIZE_ORIGINAL['width'],
                         'height': IMG_SIZE_ROUNDED_TO_64['height']- IMG_SIZE_ORIGINAL['height']}
 

@@ -169,6 +169,21 @@ if __name__ == "__main__":
                                  output_annotation_dir="")
 
             images_aug_list, kpsois_aug_list = da.augment_images()
+    if test == 1:
+        """
+        Perform Augmentation on original sized images and append to csv
+        """
+
+        da = DataAugmentator(seq=seq,
+                             landmarks_num=20,
+                             batch_size=8,
+                             images_dir="data/2304/images/",
+                             masks_dir="",
+                             annotation_dir="data/2304/cephalo_landmarks.csv",
+                             output_dir="data/2304/augmented_images/",
+                             output_annotation_dir="")
+
+        images_aug_list, kpsois_aug_list = da.augment_images()
 
     else:
         da = DataAugmentator(seq=seq,

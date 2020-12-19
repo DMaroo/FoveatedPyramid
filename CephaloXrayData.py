@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import torchvision.transforms as transforms
 import pandas as pd
-from cephaloConstants import IMG_SIZE_ORIGINAL, IMG_SIZE_ROUNDED_TO_64, IMG_TRANSFORM_PADDING
+from cephaloConstants import IMG_SIZE_ORIGINAL, IMG_SIZE_ROUNDED_TO_64, IMG_TRANSFORM_PADDING, IMAGE_PATH
 
 class HeadXrays(Dataset):
 
@@ -86,7 +86,7 @@ class TransformedHeadXrayAnnos(Transform):
         middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
 
         ty = lambda x: (x[landmarks] - middle) / float(IMG_SIZE_ROUNDED_TO_64['width']) * 2
-        path = "data/512"
+        path = IMAGE_PATH
         # if 'SLURM_TMPDIR' in os.environ:
         #     path = os.path.join(os.environ['SLURM_TMPDIR'],'RawImage')
         super().__init__(HeadXrays(path),indices = indices,tx=tx,ty=ty)
@@ -102,7 +102,7 @@ class TransformedXrays(Transform):
         middle = np.array([IMG_SIZE_ROUNDED_TO_64['width'], IMG_SIZE_ROUNDED_TO_64['height']]) / 2
 
         ty = lambda x: (x[landmarks] - middle) / float(IMG_SIZE_ROUNDED_TO_64['width']) * 2
-        path = "data/512"
+        path = IMAGE_PATH
         # if 'SLURM_TMPDIR' in os.environ:
         #     path = os.path.join(os.environ['SLURM_TMPDIR'],'RawImage')
         super().__init__(HeadXrays(path),indices = indices,tx=tx,ty=ty)
