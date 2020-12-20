@@ -442,7 +442,7 @@ if __name__=='__main__':
             from time import time
             rt = time()
 
-            pnt_tuples = cephaloConstants.cephalo_landmarks()[:1]
+            pnt_tuples = cephaloConstants.cephalo_landmarks()[:15]
 
             for fold in range(1):
                 for pnt in pnt_tuples:

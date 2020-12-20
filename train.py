@@ -518,8 +518,8 @@ if __name__ == '__main__':
                     train_cephalo(f"big_cephalo_{cephalo_pnt}_{fold}", [cephalo_pnt], batched=True, fold=fold, num_folds=4, fold_size=2682, iterations=10, load=False ,avg_labels=False)
 
         elif test==8:
-            print("Train on all 20 cephalo landmarks from scratch")
-            pnts = cephaloConstants.cephalo_landmarks()
+            print("Train on all 14 cephalo landmarks from scratch, transfer leanrning")
+            pnts = cephaloConstants.cephalo_landmarks()[:15]
             for fold in range(1):
                 for i in pnts:
                     (name, cephalo_pnt) = i

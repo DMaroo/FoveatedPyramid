@@ -14,6 +14,10 @@ def show_landmarks(image, landmarks, ground_truth=None):
     # plt.figlegend('', ('Red', 'Blue'), 'center left')
     plt.pause(0.001)  # pause a bit so that plots are updated
 
+def rescale_point_to_original_size(point):
+    middle = np.array([cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'], cephaloConstants.IMG_SIZE_ROUNDED_TO_64['height']]) / 2
+    return ((point*cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
+
 ver = int(sys.argv[1])
 
 if ver==0:
@@ -110,13 +114,10 @@ predictions = predictions.transpose(1,0,2,3)
 
 print(res.shape)
 
-def rescale_point_to_original_size(point):
-    middle = np.array([cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'], cephaloConstants.IMG_SIZE_ROUNDED_TO_64['height']]) / 2
-    return ((point*cephaloConstants.IMG_SIZE_ROUNDED_TO_64['width'])/2) + middle
-
 if ver==1:
     indices = range(0, 150, 9)
     indicies_to_plot = indices[4:8]
+    import pdb; pdb.set_trace()
     val_xrays = CephaloXrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[cephaloConstants.cephalo_landmarks()[0][1]])
     fig = plt.figure()
     for i, xray in enumerate(val_xrays):
