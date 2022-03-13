@@ -79,8 +79,8 @@ elif ver==7:
         doc = np.load(f)['arr_0']
 
 
-print(res)
-print(predictions)
+# print(res)
+# print(predictions)
 
 import pdb; set_trace()
 

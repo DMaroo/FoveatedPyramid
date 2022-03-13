@@ -30,7 +30,7 @@ def train(name, landmarks, load=False, startEpoch=0, batched=False, fold=3, num_
     print(f"AVG? {avg_labels}, RMS? {rms}")
     print(f"BEGIN {name} {landmarks}")
     batchsize=2
-    num_epochs=40
+    num_epochs=10
     device = 'cuda'
 
 
@@ -497,7 +497,7 @@ if __name__ == '__main__':
             for fold in range(4):
                 for i in range(19):
                     print(f"Running fold {fold}, point {i}")
-                    train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=100,iterations=10,avg_labels=False)
+                    train(f"big_hybrid_{i}_{fold}", [i],batched=True,fold=fold,num_folds=4,fold_size=10,iterations=10,avg_labels=False)
 
         elif test==5:
             print("transfer learning of 4 networks per landmark from isbi on 11 landmarks from cephalo")

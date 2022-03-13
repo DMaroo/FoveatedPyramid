@@ -39,28 +39,25 @@ print(predictions)
 res = res.transpose(1,0,2,3)
 predictions = predictions.transpose(1,0,2,3)
 
-indices = range(0, 10)
-indicies_to_plot = indices[4:8]
-pnt_tuples = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()[:1]
-(name, isbi_pnt, cephalo_pnt) = pnt_tuples[0]
-val_xrays = XrayData.TransformedXrays(indices=indicies_to_plot, landmarks=[isbi_pnt])
+# indices = range(0, 10)
+index_to_plot = 7
+pnt_tuples = cephaloConstants.filter_and_sort_isbi_to_cephalo_mapping()
+xray = XrayData.TransformedXrays(indices=[index_to_plot], landmarks=[pnt[1] for pnt in pnt_tuples])[0]
 fig = plt.figure()
 # breakpoint()
-for i, xray in enumerate(val_xrays):
-    one_predicted_point = predictions[0][0][indicies_to_plot[i]]
-    recreated_points = rescale_point_to_original_size(one_predicted_point)
-    recreated_points_gt = rescale_point_to_original_size(xray[1])
-    #OG Image Plot
-    ax = plt.subplot(len(val_xrays)//2, 2, i+1)
-    plt.tight_layout()
-    ax.set_title(f"OG Image Index: {indicies_to_plot[i]}, Error: {res[0][0][indicies_to_plot[i]][0]:2.4f}")
-    plot_dict = {
+print(np.array(predictions).shape)
+one_predicted_point = predictions[0][0][index_to_plot * 10]
+recreated_points = rescale_point_to_original_size(one_predicted_point)
+recreated_points_gt = rescale_point_to_original_size(xray[1])
+#OG Image Plot
+plt.suptitle(f"OG Image Index: {index_to_plot}, Error: {res[0][0][index_to_plot][0]:2.4f}")
+plot_dict = {
     'image': xray[0].numpy().transpose((1, 2, 0)),
     'landmarks': np.expand_dims(recreated_points, 0),
     'ground_truth': recreated_points_gt
-    }
-    plt.legend()
-    show_landmarks(**plot_dict)
+}
+plt.legend()
+show_landmarks(**plot_dict)
 
     # #Tensor Image Plot
     # ax = plt.subplot(len(val_xrays), 2, i+2)
@@ -75,7 +72,7 @@ for i, xray in enumerate(val_xrays):
     # show_landmarks(**plot_dict)
 
 lines, labels = fig.axes[-1].get_legend_handles_labels()
-fig.legend(lines, labels, loc = 'upper center')
+fig.legend(lines, labels, loc = 'lower center')
 plt.show()
 
 print(res.shape)

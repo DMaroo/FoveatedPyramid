@@ -46,7 +46,7 @@ def filter_and_sort_isbi_to_cephalo_mapping():
 
     # filter tuples with None values
     for points_tuple in mapping_list:
-        if not any(map(lambda x: x is None, points_tuple)):
+        if points_tuple[1] is not None:
             valid_mapping_list.append(points_tuple)
 
     return sorted(valid_mapping_list, key=lambda x: x[1])
